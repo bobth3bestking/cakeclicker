@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cake Clicker</title>
+    <style>
+        :root {
+            --bg-cream: #FFFDF9;
+            --panel-pink: #FFE6EB;
+            --panel-pink-hover: #FFA3B1;
+            --pastry-brown: #8B5E3C;
+            --chocolate-dark: #3E2723;
+            --strawberry-pink: #FF5E7E;
+            --strawberry-dark: #E03B5C;
+            --gold-upgrade: #FFD700;
+            --gold-upgrade-dark: #B8860B;
+            --disabled-gray: #D1C7BD;
+            --disabled-text: #8D8276;
+            --white: #FFFFFF;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--chocolate-dark);
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Custom Beautiful Pastry Scrollbars (Webkit) */
+        ::-webkit-scrollbar {
+            width: 14px;
+            height: 14px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background-color: #FFF5F7;
+            border-left: 3px solid var(--pastry-brown);
+        }
+
+        .shop-wrapper::-webkit-scrollbar-track {
+            background-color: var(--panel-pink);
+            border-radius: 10px;
+            border: 2px solid var(--pastry-brown);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--pastry-brown);
+            border-radius: 10px;
+            border: 3px solid #FFF5F7;
+            box-shadow: inset 0 0 4px rgba(0,0,0,0.1);
+        }
+
+        .shop-wrapper::-webkit-scrollbar-thumb {
+            background-color: var(--strawberry-pink);
+            border: 2px solid var(--panel-pink);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--strawberry-pink);
+        }
+
+        .shop-wrapper::-webkit-scrollbar-thumb:hover {
+            background-color: var(--strawberry-dark);
+        }
+
+        header {
+            background-color: var(--panel-pink);
+            border-bottom: 4px solid var(--pastry-brown);
+            padding: 10px 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--strawberry-pink);
+            text-shadow: 2px 2px 0px var(--pastry-brown);
+            letter-spacing: 1px;
+        }
+
+        .game-container {
+            display: flex;
+            flex: 1;
+            flex-direction: row;
+            height: calc(100vh - 60px);
+            overflow: hidden;
+        }
+
+        /* Responsive Columns */
+        .column {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            border-right: 4px solid var(--pastry-brown);
+            overflow-y: auto;
+        }
+
+        .column:last-child {
+            border-right: none;
+        }
+
+        /* Left Column: Stats & Upgrades */
+        #stats-col {
+            flex: 1;
+            padding: 20px;
+            background-color: var(--bg-cream);
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            border-bottom: 3px solid var(--pastry-brown);
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            color: var(--pastry-brown);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-panel {
+            background-color: var(--panel-pink);
+            border: 3px solid var(--pastry-brown);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 0 var(--pastry-brown);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-weight: 600;
+            border-bottom: 1px dashed rgba(139, 94, 60, 0.3);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .btn-reset {
+            background-color: var(--strawberry-pink);
+            color: var(--white);
+            border: 2px solid var(--pastry-brown);
+            padding: 6px 12px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 var(--pastry-brown);
+            font-size: 0.85rem;
+            transition: all 0.1s ease;
+        }
+
+        .btn-reset:hover {
+            background-color: var(--strawberry-dark);
+        }
+
+        .btn-reset:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        /* Centered Upgrades Grid */
+        .upgrades-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 65px);
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .upgrade-item {
+            aspect-ratio: 1;
+            background-color: var(--gold-upgrade);
+            border: 3px solid var(--pastry-brown);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 0 var(--pastry-brown);
+            transition: all 0.1s ease;
+        }
+
+        .upgrade-item:hover:not(.disabled) {
+            transform: translateY(-2px);
+            background-color: #FFE44D;
+            box-shadow: 0 6px 0 var(--pastry-brown);
+        }
+
+        .upgrade-item:active:not(.disabled) {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .upgrade-item.disabled {
+            background-color: var(--disabled-gray);
+            cursor: not-allowed;
+            box-shadow: 0 4px 0 var(--disabled-text);
+            border-color: var(--disabled-text);
+        }
+
+        .upgrade-item.disabled span {
+            filter: grayscale(1) opacity(0.4);
+        }
+
+        .upgrade-item.owned {
+            display: none;
+        }
+
+        /* Tooltip Framework */
+        .tooltip-container {
+            position: relative;
+        }
+
+        .tooltip {
+            visibility: hidden;
+            position: absolute;
+            background-color: rgba(62, 39, 35, 0.98);
+            border: 2px solid var(--panel-pink);
+            border-radius: 8px;
+            padding: 10px;
+            width: 220px;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: rgba(62, 39, 35, 0.98) transparent transparent transparent;
+        }
+
+        .tooltip-container:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip h4 {
+            color: var(--panel-pink);
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .tooltip p {
+            color: #FFF5F7;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+
+        .tooltip .cost-text {
+            color: #FFD700;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        /* Middle Column: The Bakery */
+        #bakery-col {
+            flex: 1.2;
+            background: radial-gradient(circle, #FFF5F7 0%, #FFE6EB 100%);
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            position: relative;
+            text-align: center;
+        }
+
+        .score-container {
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px 30px;
+            border-radius: 20px;
+            border: 3px solid var(--pastry-brown);
+            box-shadow: 0 6px 0 var(--pastry-brown);
+        }
+
+        #cake-count {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--strawberry-pink);
+            display: block;
+        }
+
+        #cps-count {
+            font-size: 1.1rem;
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .cake-button-wrapper {
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.05s ease;
+        }
+
+        .cake-button-wrapper:active {
+            transform: scale(0.95);
+        }
+
+        .cake-svg {
+            width: 280px;
+            height: 280px;
+            filter: drop-shadow(0px 12px 0px var(--pastry-brown));
+            transition: transform 0.1s ease;
+        }
+
+        .cake-button-wrapper:hover .cake-svg {
+            transform: scale(1.03);
+        }
+
+        /* Floating Text Particle */
+        .floating-text {
+            position: absolute;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--strawberry-pink);
+            text-shadow: 2px 2px 0 #fff;
+            pointer-events: none;
+            animation: floatUp 0.8s ease-out forwards;
+            z-index: 100;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-120px) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        /* Golden Cake Styles and Glow Animations */
+        .golden-cake {
+            position: absolute;
+            width: 65px;
+            height: 65px;
+            background: radial-gradient(circle, #FFE57F 0%, #FFC107 100%);
+            border: 3px solid var(--pastry-brown);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            box-shadow: 0 0 20px #FFD700, 0 4px 8px rgba(0,0,0,0.25);
+            animation: goldenGlow 1.4s infinite alternate, goldenFadeInout 15s linear forwards;
+            z-index: 150;
+        }
+
+        @keyframes goldenGlow {
+            0% {
+                box-shadow: 0 0 12px #FFD700, 0 4px 8px rgba(0,0,0,0.2);
+                transform: scale(1);
+            }
+            100% {
+                box-shadow: 0 0 28px #FFD700, 0 4px 14px rgba(0,0,0,0.35);
+                transform: scale(1.08);
+            }
+        }
+
+        @keyframes goldenFadeInout {
+            0% { opacity: 0; transform: scale(0.5); }
+            8% { opacity: 1; transform: scale(1); }
+            92% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.6); }
+        }
+
+        /* Right Column: Shop Layout with Scrollable Option Rack */
+        #shop-col {
+            flex: 1.3;
+            padding: 20px;
+            background-color: #FFFDF9;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .shop-controls {
+            display: flex;
+            background-color: var(--panel-pink);
+            border: 3px solid var(--pastry-brown);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 0 var(--pastry-brown);
+            flex-shrink: 0;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 6px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.1s ease;
+        }
+
+        .toggle-btn.active {
+            background-color: var(--strawberry-pink);
+            color: var(--white);
+        }
+
+        .shop-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            border: 3px solid var(--pastry-brown);
+            border-radius: 15px;
+            background-color: rgba(255, 245, 247, 0.3);
+            padding: 10px;
+        }
+
+        .shop-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .shop-item {
+            display: flex;
+            align-items: center;
+            background-color: var(--panel-pink);
+            border: 2px solid var(--pastry-brown);
+            border-radius: 12px;
+            padding: 8px 12px;
+            cursor: pointer;
+            position: relative;
+            box-shadow: 0 3px 0 var(--pastry-brown);
+            transition: all 0.1s ease;
+        }
+
+        .shop-item:hover:not(.disabled) {
+            transform: translateY(-1px);
+            background-color: var(--panel-pink-hover);
+            box-shadow: 0 4px 0 var(--pastry-brown);
+        }
+
+        .shop-item:active:not(.disabled) {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
+
+        .shop-item.disabled {
+            background-color: var(--disabled-gray);
+            border-color: var(--disabled-text);
+            box-shadow: 0 3px 0 var(--disabled-text);
+            cursor: not-allowed;
+        }
+
+        .shop-item.disabled * {
+            color: var(--disabled-text) !important;
+        }
+
+        .item-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            background-color: var(--white);
+            border: 2px solid var(--pastry-brown);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .shop-item.disabled .item-icon-wrapper {
+            border-color: var(--disabled-text);
+            background-color: #E2DAD2;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-cost {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #6D4C41;
+        }
+
+        .shop-item:not(.disabled) .item-cost.affordable {
+            color: #2E7D32;
+        }
+
+        .shop-item:not(.disabled) .item-cost.unaffordable {
+            color: #C62828;
+        }
+
+        .item-count {
+            font-size: 1.5rem;
+            font-weight: 900;
+            opacity: 0.25;
+            margin-left: 8px;
+        }
+
+        /* Thematic Cheat Menu Modal Overlay Box */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(62, 39, 35, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: var(--bg-cream);
+            border: 4px solid var(--pastry-brown);
+            border-radius: 20px;
+            padding: 25px;
+            width: 410px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .modal-content h3 {
+            font-size: 1.4rem;
+            color: var(--strawberry-pink);
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--pastry-brown);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            text-align: center;
+            font-weight: 600;
+            background-color: var(--white);
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: var(--strawberry-pink);
+        }
+
+        .cheat-field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .cheat-control-row {
+            background: rgba(139, 94, 60, 0.05);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(139, 94, 60, 0.15);
+        }
+
+        .cheat-field-group label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--pastry-brown);
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        /* Range Sliders */
+        input[type=range].pastry-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            margin: 8px 0 2px 0;
+        }
+
+        input[type=range].pastry-slider:focus {
+            outline: none;
+        }
+
+        input[type=range].pastry-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 10px;
+            cursor: pointer;
+            background: var(--panel-pink);
+            border: 2px solid var(--pastry-brown);
+            border-radius: 6px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        input[type=range].pastry-slider::-webkit-slider-thumb {
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background: var(--strawberry-pink);
+            border: 2px solid var(--pastry-brown);
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -8px;
+            box-shadow: 0 3px 0 var(--pastry-brown);
+            transition: transform 0.1s, background-color 0.1s;
+        }
+
+        input[type=range].pastry-slider::-webkit-slider-thumb:hover {
+            background-color: var(--panel-pink-hover);
+            transform: scale(1.1);
+        }
+
+        input[type=range].pastry-slider::-webkit-slider-thumb:active {
+            background-color: var(--strawberry-dark);
+            transform: scale(1.15);
+        }
+
+        input[type=range].pastry-slider::-moz-range-track {
+            width: 100%;
+            height: 10px;
+            cursor: pointer;
+            background: var(--panel-pink);
+            border: 2px solid var(--pastry-brown);
+            border-radius: 6px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        input[type=range].pastry-slider::-moz-range-thumb {
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            background: var(--strawberry-pink);
+            border: 2px solid var(--pastry-brown);
+            cursor: pointer;
+            box-shadow: 0 3px 0 var(--pastry-brown);
+            transition: transform 0.1s, background-color 0.1s;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .feedback-text {
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        /* Mobile Layout Adjustments */
+        @media (max-width: 900px) {
+            .game-container {
+                flex-direction: column;
+                overflow-y: auto;
+                height: auto;
+            }
+            .column {
+                height: auto;
+                border-right: none;
+                border-bottom: 4px solid var(--pastry-brown);
+                overflow-y: visible;
+            }
+            .shop-wrapper {
+                max-height: 400px;
+            }
+            #bakery-col {
+                padding: 40px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🎂 CAKE CLICKER 🎂</h1>
+    </header>
+
+    <div class="game-container">
+        <!-- Column 1: Stats & Upgrades -->
+        <div class="column" id="stats-col">
+            <div class="section-title">
+                <span>Statistics</span>
+                <div style="display: flex; gap: 6px;">
+                    <button class="btn-reset" id="cheat-btn" style="background-color: var(--gold-upgrade); color: var(--chocolate-dark); box-shadow: 0 3px 0 var(--pastry-brown);">Cheats</button>
+                    <button class="btn-reset" id="save-btn" style="background-color: #2E7D32; box-shadow: 0 3px 0 #1B5E20;">Save Progress</button>
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <div class="stat-row">
+                    <span>Total Cakes Baked:</span>
+                    <span id="stat-total-baked">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Time Elapsed:</span>
+                    <span id="stat-time">0s</span>
+                </div>
+                <div class="stat-row">
+                    <span>Clicking Power:</span>
+                    <span id="stat-click-power">1 Cake</span>
+                </div>
+            </div>
+
+            <div class="section-title">Upgrades</div>
+            <div class="upgrades-grid" id="upgrades-container">
+                <!-- Strategic Core Upgrades Grid -->
+            </div>
+        </div>
+
+        <!-- Column 2: The Bakery -->
+        <div class="column" id="bakery-col">
+            <div class="score-container">
+                <span id="cake-count">0 Cakes</span>
+                <span id="cps-count">Cakes Per Second: 0</span>
+            </div>
+
+            <div class="cake-button-wrapper" id="cake-btn">
+                <!-- Gorgeous Layered CSS/SVG 3D Cake -->
+                <svg class="cake-svg" viewBox="0 0 200 200">
+                    <ellipse cx="100" cy="165" rx="80" ry="15" fill="#CFD8DC" stroke="#8B5E3C" stroke-width="4"/>
+                    <path d="M 50 165 L 50 175 Q 100 190 150 175 L 150 165 Z" fill="#90A4AE" stroke="#8B5E3C" stroke-width="4"/>
+                    <ellipse cx="100" cy="150" rx="66" ry="12" fill="rgba(62,39,35,0.15)"/>
+                    <path d="M 40 110 L 40 150 Q 100 170 160 150 L 160 110 Z" fill="#D7CCC8" stroke="#8B5E3C" stroke-width="4"/>
+                    <path d="M 40 130 Q 100 145 160 130 L 160 136 Q 100 151 40 136 Z" fill="#FFEB3B" opacity="0.9"/>
+                    <path d="M 44 75 L 44 112 Q 100 130 156 112 L 156 75 Z" fill="#F8BBD0" stroke="#8B5E3C" stroke-width="4"/>
+                    <path d="M 44 92 Q 100 107 156 92 L 156 98 Q 100 113 44 98 Z" fill="#FFFFFF" opacity="0.9"/>
+                    <path d="M 48 40 L 48 77 Q 100 95 152 77 L 152 40 Z" fill="#FF8A80" stroke="#8B5E3C" stroke-width="4"/>
+                    <ellipse cx="100" cy="40" rx="52" ry="15" fill="#E8F5E9" stroke="#8B5E3C" stroke-width="4"/>
+                    <path d="M 48 42 Q 60 55 70 45 Q 85 60 100 45 Q 120 58 135 44 Q 145 52 152 41 Q 152 45 152 47 Q 100 65 48 47 Z" fill="#E8F5E9"/>
+                    <circle cx="70" cy="35" r="5" fill="#FF4081"/>
+                    <circle cx="100" cy="45" r="5" fill="#FF4081"/>
+                    <circle cx="130" cy="35" r="5" fill="#FF4081"/>
+                    <circle cx="100" cy="30" r="4" fill="#FF4081"/>
+                    <path d="M 100 15 Q 105 5 115 10" fill="none" stroke="#5D4037" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="100" cy="20" r="9" fill="#D50000" stroke="#7f0000" stroke-width="1"/>
+                    <circle cx="97" cy="17" r="3" fill="#FFFFFF" opacity="0.7"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Column 3: The Shop -->
+        <div class="column" id="shop-col">
+            <div class="section-title">The Bakery Shop</div>
+            
+            <div class="shop-controls">
+                <button class="toggle-btn active" data-amt="1">Buy x1</button>
+                <button class="toggle-btn" data-amt="10">Buy x10</button>
+                <button class="toggle-btn" data-amt="100">Buy x100</button>
+            </div>
+
+            <div class="shop-wrapper">
+                <div class="shop-list" id="shop-container">
+                    <!-- Dynamic progression options cleanly generated below -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- In-Game Custom Interactive Cheat Menu Overlay Modal Box -->
+    <div id="cheat-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <!-- Screen A: Auth Password Prompt Screen -->
+            <div id="cheat-auth-screen">
+                <h3>🔐 Cheat Terminal</h3>
+                <p style="font-size: 0.85rem; margin-bottom: 12px; font-weight: 500;">Enter your master passcode to unlock configuration parameters:</p>
+                <input type="password" id="cheat-pass-input" class="modal-input" placeholder="Passcode...">
+                <div id="cheat-feedback" class="feedback-text" style="color: var(--strawberry-dark); display: none;"></div>
+                <div class="modal-actions">
+                    <button class="btn-reset" id="cheat-submit-auth">Unlock</button>
+                    <button class="btn-reset" id="cheat-cancel-auth" style="background-color: var(--disabled-gray); color: var(--chocolate-dark);">Cancel</button>
+                </div>
+            </div>
+
+            <!-- Screen B: Synchronized Range Slider & Input Value Editor Screen -->
+            <div id="cheat-dashboard-screen" style="display: none;">
+                <h3>⚡ Master Terminal</h3>
+                <div class="cheat-field-group">
+                    
+                    <div class="cheat-control-row">
+                        <label for="cheat-cakes-input">Modify Cake Stock (Expressions OK):</label>
+                        <input type="text" id="cheat-cakes-input" class="modal-input">
+                        <input type="range" id="cheat-cakes-slider" class="pastry-slider" min="0" max="18" value="0">
+                    </div>
+
+                    <div class="cheat-control-row">
+                        <label for="cheat-power-input">Click Power (Expressions OK):</label>
+                        <input type="text" id="cheat-power-input" class="modal-input">
+                        <input type="range" id="cheat-power-slider" class="pastry-slider" min="0" max="18" value="0">
+                    </div>
+
+                    <div class="cheat-control-row">
+                        <label for="cheat-cps-input">CPS Bonus (Expressions OK):</label>
+                        <input type="text" id="cheat-cps-input" class="modal-input">
+                        <input type="range" id="cheat-cps-slider" class="pastry-slider" min="0" max="18" value="0">
+                    </div>
+
+                </div>
+                <div id="cheat-save-feedback" class="feedback-text" style="color: #2E7D32; display: none;">Changes applied!</div>
+                <div class="modal-actions">
+                    <button class="btn-reset" id="cheat-apply-vals" style="background-color: #2E7D32;">Apply</button>
+                    <button class="btn-reset" id="cheat-max-all" style="background-color: #D84315; color: white; box-shadow: 0 3px 0 #A72A00;">Max Out All</button>
+                    <button class="btn-reset" id="cheat-close-dash" style="background-color: var(--disabled-gray); color: var(--chocolate-dark);">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Notation Reference Milestones
+        const milestonePresets = [
+            "0", "500", "50 K", "1 M", "250 M", "1 B", "500 B", "1 T", "750 T", 
+            "1 Qa", "1 Qi", "1 Sx", "1 Sp", "1 Oc", "1 No", "1 Dc", "1 aa", "1 ab", "1 ac"
+        ];
+
+        const suffixes = [
+            { s: "", name: "" },
+            { s: "K", name: "thousand" },
+            { s: "M", name: "million" },
+            { s: "B", name: "billion" },
+            { s: "T", name: "trillion" },
+            { s: "Qa", name: "quadrillion" },
+            { s: "Qi", name: "quintillion" },
+            { s: "Sx", name: "sextillion" },
+            { s: "Sp", name: "septillion" },
+            { s: "Oc", name: "octillion" },
+            { s: "No", name: "nonillion" },
+            { s: "Dc", name: "decillion" }
+        ];
+
+        function generateAlphaNotationSequence() {
+            const alphabet = "abcdefghijklmnopqrstuvwxyz";
+            for (let i = 0; i < alphabet.length; i++) {
+                for (let j = 0; j < alphabet.length; j++) {
+                    suffixes.push({
+                        s: alphabet[i] + alphabet[j],
+                        name: alphabet[i] + alphabet[j]
+                    });
+                }
+            }
+        }
+        generateAlphaNotationSequence();
+
+        // Game State Core
+        let state = {
+            cakes: 0,
+            totalCakesBaked: 0,
+            timeElapsed: 0,
+            buildings: {}, 
+            upgrades: {
+                spatula: { owned: false, cost: 100 },
+                whisk: { owned: false, cost: 500 },
+                sugar: { owned: false, cost: 1000 },
+                motors: { owned: false, cost: 5000 }
+            },
+            cheatsUnlocked: false,
+            cheatAttempts: 0,
+            cheatClickPower: 0,
+            cheatCps: 0
+        };
+
+        const tierPrefixes = [
+            "Basic", "Amateur", "Grandma's", "Kitchen", "Standard", "Sturdy", "Improved", "Enhanced", 
+            "Fine", "Decorated", "Premium", "Deluxe", "Heavy-Duty", "Commercial", "Artisan", "Pro", 
+            "Expert", "Master", "Grandmaster", "Supreme"
+        ];
+
+        const baseLines = [
+            { type: 'clicker', name: 'Pastry Tap', icon: '👆', startCost: 10, startCps: 0, multiplier: 1.5, isClick: true },
+            { type: 'recipe', name: 'Recipe Book', icon: '👵', startCost: 25, startCps: 0.1, multiplier: 1.58, isClick: false },
+            { type: 'beater', name: 'Auto-Beater', icon: '🥣', startCost: 140, startCps: 1.0, multiplier: 1.58, isClick: false },
+            { type: 'chef', name: 'Pastry Chef', icon: '👨‍🍳', startCost: 1300, startCps: 8.0, multiplier: 1.58, isClick: false },
+            { type: 'oven', name: 'Industrial Oven', icon: '🌋', startCost: 14000, startCps: 47.0, multiplier: 1.58, isClick: false },
+            { type: 'factory', name: 'Cake Factory', icon: '🏭', startCost: 150000, startCps: 260.0, multiplier: 1.58, isClick: false }
+        ];
+
+        let buildingMeta = {};
+        const upgradeMeta = {
+            spatula: { name: "Plastic Spatula", desc: "Doubles clicking power.", icon: "🥄" },
+            whisk: { name: "Golden Whisk", desc: "Increases clicking power by +5 per click.", icon: "✨" },
+            sugar: { name: "Sugar Rush", desc: "All Recipe category options generate 2x CPS.", icon: "🍬" },
+            motors: { name: "Efficient Motors", desc: "All Beater category options generate 2x CPS.", icon: "⚡" }
+        };
+
+        function generateBakeryShopSystem() {
+            baseLines.forEach(line => {
+                for (let tier = 1; tier <= 20; tier++) {
+                    const bId = `${line.type}_t${tier}`;
+                    const cost = Math.floor(line.startCost * Math.pow(line.multiplier, tier - 1));
+                    
+                    if (line.isClick) {
+                        state.buildings[bId] = { owned: 0, baseCost: cost, clickPower: tier };
+                        buildingMeta[bId] = {
+                            name: `${tierPrefixes[tier - 1]} ${line.name}`,
+                            icon: line.icon,
+                            typeGroup: line.type,
+                            isClick: true,
+                            desc: `Increases manual clicking power by +${tier} per unit.`
+                        };
+                    } else {
+                        const cps = line.startCps * Math.pow(1.5, tier - 1);
+                        state.buildings[bId] = { owned: 0, baseCost: cost, cps: cps };
+                        buildingMeta[bId] = {
+                            name: `${tierPrefixes[tier - 1]} ${line.name}`,
+                            icon: line.icon,
+                            typeGroup: line.type,
+                            isClick: false,
+                            desc: `Produces +${formatNumber(cps)} CPS per unit.`
+                        };
+                    }
+                }
+            });
+        }
+
+        let buyQuantity = 1;
+        let lastUpdateTime = Date.now();
+
+        function getMultiBuyCost(id, currentOwned, countToBuy) {
+            let total = 0;
+            const baseCost = state.buildings[id].baseCost;
+            for (let i = 0; i < countToBuy; i++) {
+                total += Math.floor(baseCost * Math.pow(1.15, currentOwned + i));
+            }
+            return total;
+        }
+
+        function formatNumber(num, exact = false) {
+            if (exact && num < 1000) {
+                return Math.floor(num).toLocaleString();
+            }
+            if (num < 1000) {
+                return num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+            }
+
+            let tier = Math.floor(Math.log10(num) / 3);
+            if (tier >= suffixes.length) tier = suffixes.length - 1;
+            if (tier < 0) tier = 0;
+
+            if (tier === 0) return num.toFixed(1);
+
+            const normalValue = num / Math.pow(10, tier * 3);
+            return normalValue.toFixed(2) + " " + suffixes[tier].s;
+        }
+
+        function parseInputNumber(str) {
+            if (!str) return 0;
+            let clean = str.trim().toLowerCase().replace(/,/g, '');
+
+            clean = clean.replace(/([0-9.]+)\s*([a-z]+)/g, (match, numStr, suffixStr) => {
+                const baseValue = parseFloat(numStr);
+                if (isNaN(baseValue)) return match;
+                
+                if (suffixStr === 'k') return (baseValue * 1e3).toString();
+                if (suffixStr === 'm') return (baseValue * 1e6).toString();
+                if (suffixStr === 'b') return (baseValue * 1e9).toString();
+                if (suffixStr === 't') return (baseValue * 1e12).toString();
+
+                for (let i = 0; i < suffixes.length; i++) {
+                    const sShort = suffixes[i].s.toLowerCase();
+                    const sName = suffixes[i].name.toLowerCase();
+
+                    if (suffixStr === sShort || 
+                        suffixStr === sName || 
+                        suffixStr === sName + "ion" || 
+                        suffixStr === sName + "s") {
+                        return (baseValue * Math.pow(10, i * 3)).toString();
+                    }
+                }
+                return match; 
+            });
+
+            const nonMathChars = /[^0-9.+\-*/() ]/g;
+            if (nonMathChars.test(clean)) {
+                return parseFloat(clean) || 0;
+            }
+
+            try {
+                const computedResult = Function('"use strict"; return (' + clean + ')')();
+                return typeof computedResult === 'number' && !isNaN(computedResult) && isFinite(computedResult) ? Math.max(0, computedResult) : 0;
+            } catch (err) {
+                return parseFloat(clean) || 0;
+            }
+        }
+
+        function getClickPower() {
+            let power = 1;
+            if (state.upgrades.whisk.owned) power += 5;
+            if (state.upgrades.spatula.owned) power *= 2;
+            
+            for (const id in state.buildings) {
+                if (buildingMeta[id] && buildingMeta[id].isClick) {
+                    power += state.buildings[id].owned * state.buildings[id].clickPower;
+                }
+            }
+            power += state.cheatClickPower;
+            return power;
+        }
+
+        function getBuildingCps(id) {
+            if (!state.buildings[id].cps) return 0;
+            let baseCps = state.buildings[id].cps;
+            const typeGroup = buildingMeta[id].typeGroup;
+            if (typeGroup === 'recipe' && state.upgrades.sugar.owned) baseCps *= 2;
+            if (typeGroup === 'beater' && state.upgrades.motors.owned) baseCps *= 2;
+            return baseCps;
+        }
+
+        function getTotalCps() {
+            let totalCps = 0;
+            for (const id in state.buildings) {
+                if (!buildingMeta[id].isClick) {
+                    totalCps += state.buildings[id].owned * getBuildingCps(id);
+                }
+            }
+            totalCps += state.cheatCps;
+            return totalCps;
+        }
+
+        function setupSliderSync(inputId, sliderId) {
+            const input = document.getElementById(inputId);
+            const slider = document.getElementById(sliderId);
+
+            slider.oninput = () => {
+                input.value = milestonePresets[slider.value];
+            };
+        }
+
+        function initDOM() {
+            const sortedBuildingIds = Object.keys(state.buildings).sort((a, b) => state.buildings[a].baseCost - state.buildings[b].baseCost);
+            
+            const shopContainer = document.getElementById('shop-container');
+            shopContainer.innerHTML = '';
+            
+            sortedBuildingIds.forEach(id => {
+                const item = document.createElement('div');
+                item.className = 'shop-item tooltip-container';
+                item.id = `shop-${id}`;
+                item.onclick = () => buyBuilding(id);
+                item.innerHTML = `
+                    <div class="item-icon-wrapper">${buildingMeta[id].icon}</div>
+                    <div class="item-info">
+                        <span class="item-name">${buildingMeta[id].name}</span>
+                        <span class="item-cost" id="cost-${id}">0 Cakes</span>
+                    </div>
+                    <div class="item-count" id="count-${id}">0</div>
+                    <div class="tooltip">
+                        <h4>${buildingMeta[id].name}</h4>
+                        <p>${buildingMeta[id].desc}</p>
+                    </div>
+                `;
+                shopContainer.appendChild(item);
+            });
+
+            const upgradesContainer = document.getElementById('upgrades-container');
+            upgradesContainer.innerHTML = '';
+            for (const id in state.upgrades) {
+                const uMeta = upgradeMeta[id];
+                const item = document.createElement('div');
+                item.className = 'upgrade-item tooltip-container';
+                item.id = `upgrade-${id}`;
+                item.onclick = () => purchaseUpgrade(id);
+                item.innerHTML = `
+                    <span style="font-size: 1.4rem;">${uMeta.icon}</span>
+                    <div class="tooltip">
+                        <h4>${uMeta.name}</h4>
+                        <p>${uMeta.desc}</p>
+                        <span class="cost-text">Cost: ${state.upgrades[id].cost} Cakes</span>
+                    </div>
+                `;
+                upgradesContainer.appendChild(item);
+            }
+
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    buyQuantity = parseInt(e.target.getAttribute('data-amt'));
+                    updateUI();
+                };
+            });
+
+            document.getElementById('cake-btn').onclick = (e) => {
+                const clickPower = getClickPower();
+                state.cakes += clickPower;
+                state.totalCakesBaked += clickPower;
+                spawnFloatingText(e, `+${formatNumber(clickPower)}`);
+                updateUI();
+            };
+
+            document.getElementById('cheat-btn').onclick = openCheatModalView;
+            document.getElementById('cheat-cancel-auth').onclick = closeCheatModalView;
+            document.getElementById('cheat-close-dash').onclick = closeCheatModalView;
+            document.getElementById('cheat-submit-auth').onclick = verifyCheatPasscode;
+            
+            setupSliderSync('cheat-cakes-input', 'cheat-cakes-slider');
+            setupSliderSync('cheat-power-input', 'cheat-power-slider');
+            setupSliderSync('cheat-cps-input', 'cheat-cps-slider');
+
+            document.getElementById('cheat-apply-vals').onclick = () => {
+                const rawCakes = document.getElementById('cheat-cakes-input').value;
+                const rawPower = document.getElementById('cheat-power-input').value;
+                const rawCps = document.getElementById('cheat-cps-input').value;
+
+                const cVal = parseInputNumber(rawCakes);
+                const pVal = parseInputNumber(rawPower);
+                const sVal = parseInputNumber(rawCps);
+
+                state.cakes = cVal;
+                if (cVal > state.totalCakesBaked) state.totalCakesBaked = cVal;
+                state.cheatClickPower = pVal;
+                state.cheatCps = sVal;
+
+                const feedback = document.getElementById('cheat-save-feedback');
+                feedback.style.display = 'block';
+                setTimeout(() => { feedback.style.display = 'none'; }, 2000);
+                
+                updateUI();
+            };
+
+            // Dedicated Cheat Engine Command: Max Out All Content button listener
+            document.getElementById('cheat-max-all').onclick = () => {
+                // Set every programmatic building tier option count to 100 items
+                for (const id in state.buildings) {
+                    state.buildings[id].owned = 100;
+                }
+                // Toggle all standard efficiency multiplier upgrades to true
+                for (const id in state.upgrades) {
+                    state.upgrades[id].owned = true;
+                }
+                // Give a balanced matching baseline pocket currency block
+                state.cakes = 1e16;
+                state.totalCakesBaked = Math.max(state.totalCakesBaked, 1e16);
+
+                const feedback = document.getElementById('cheat-save-feedback');
+                feedback.innerText = "All items and upgrades maxed out!";
+                feedback.style.color = "#D84315";
+                feedback.style.display = 'block';
+                
+                setTimeout(() => { 
+                    feedback.style.display = 'none'; 
+                    feedback.style.color = "#2E7D32"; 
+                    feedback.innerText = "Changes applied!"; 
+                }, 2200);
+
+                updateUI();
+            };
+
+            document.getElementById('save-btn').onclick = () => {
+                saveGame();
+                const saveBtn = document.getElementById('save-btn');
+                const originalText = saveBtn.innerText;
+                
+                saveBtn.innerText = "Saved!";
+                saveBtn.style.backgroundColor = "#4CAF50";
+                
+                setTimeout(() => {
+                    saveBtn.innerText = originalText;
+                    saveBtn.style.backgroundColor = "#2E7D32";
+                }, 1200);
+            };
+        }
+
+        function openCheatModalView() {
+            if (state.cheatAttempts >= 2) return;
+            
+            const modal = document.getElementById('cheat-modal');
+            modal.style.display = 'flex';
+
+            const authScreen = document.getElementById('cheat-auth-screen');
+            const dashScreen = document.getElementById('cheat-dashboard-screen');
+            const feedback = document.getElementById('cheat-feedback');
+            
+            feedback.style.display = 'none';
+            document.getElementById('cheat-pass-input').value = '';
+
+            if (state.cheatsUnlocked) {
+                authScreen.style.display = 'none';
+                dashScreen.style.display = 'block';
+                
+                document.getElementById('cheat-cakes-input').value = formatNumber(state.cakes);
+                document.getElementById('cheat-power-input').value = formatNumber(state.cheatClickPower);
+                document.getElementById('cheat-cps-input').value = formatNumber(state.cheatCps);
+
+                document.getElementById('cheat-cakes-slider').value = 0;
+                document.getElementById('cheat-power-slider').value = 0;
+                document.getElementById('cheat-cps-slider').value = 0;
+            } else {
+                authScreen.style.display = 'block';
+                dashScreen.style.display = 'none';
+            }
+        }
+
+        function closeCheatModalView() {
+            document.getElementById('cheat-modal').style.display = 'none';
+        }
+
+        function hashPassword(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = (hash << 5) - hash + str.charCodeAt(i);
+                hash |= 0;
+            }
+            return hash;
+        }
+
+        function verifyCheatPasscode() {
+            const inputField = document.getElementById('cheat-pass-input');
+            const feedback = document.getElementById('cheat-feedback');
+
+            if (hashPassword(inputField.value) === 1510340) {
+                state.cheatsUnlocked = true;
+                openCheatModalView();
+            } else {
+                state.cheatAttempts++;
+                if (state.cheatAttempts >= 2) {
+                    closeCheatModalView();
+                    updateUI();
+                } else {
+                    feedback.innerText = "Incorrect code. 1 attempt left before terminal self-destructs.";
+                    feedback.style.display = 'block';
+                    inputField.value = '';
+                }
+            }
+        }
+
+        function spawnFloatingText(e, text, customX = null, customY = null) {
+            const wrapper = document.getElementById('cake-btn');
+            const floating = document.createElement('div');
+            floating.className = 'floating-text';
+            floating.innerText = text;
+            
+            if (customX !== null && customY !== null) {
+                floating.style.left = `${customX}px`;
+                floating.style.top = `${customY}px`;
+                document.getElementById('bakery-col').appendChild(floating);
+            } else {
+                const rect = wrapper.getBoundingClientRect();
+                const x = (e.clientX - rect.left) + (Math.random() * 30 - 15);
+                const y = (e.clientY - rect.top) - 10;
+                floating.style.left = `${x}px`;
+                floating.style.top = `${y}px`;
+                wrapper.appendChild(floating);
+            }
+            
+            setTimeout(() => floating.remove(), 800);
+        }
+
+        function createSingleGoldenCake() {
+            const bakeryCol = document.getElementById('bakery-col');
+            if (!bakeryCol) return;
+
+            const goldenCake = document.createElement('div');
+            goldenCake.className = 'golden-cake';
+            goldenCake.innerText = '🍰';
+
+            const rect = bakeryCol.getBoundingClientRect();
+            const padding = 50;
+            const x = padding + Math.random() * (rect.width - padding * 2 - 65);
+            const y = padding + Math.random() * (rect.height - padding * 2 - 65);
+
+            goldenCake.style.left = `${x}px`;
+            goldenCake.style.top = `${y}px`;
+
+            goldenCake.onclick = (e) => {
+                e.stopPropagation(); 
+                
+                let goldReward = Math.floor(state.cakes * 0.10);
+                if (goldReward < 1) goldReward = 1; 
+
+                state.cakes += goldReward;
+                state.totalCakesBaked += goldReward;
+
+                spawnFloatingText(null, `🌟 +10% Stock! (+${formatNumber(goldReward)})`, x, y);
+                goldenCake.remove();
+                updateUI();
+            };
+
+            bakeryCol.appendChild(goldenCake);
+
+            setTimeout(() => {
+                if (goldenCake.parentNode) {
+                    goldenCake.remove();
+                }
+            }, 15000);
+        }
+
+        function triggerGoldenCakeSpawnEngine() {
+            if (state.totalCakesBaked >= 1000000) {
+                createSingleGoldenCake();
+                setTimeout(createSingleGoldenCake, 400); 
+            } else {
+                createSingleGoldenCake();
+            }
+            scheduleNextGoldenCakeDrop();
+        }
+
+        function scheduleNextGoldenCakeDrop() {
+            const nextInterval = (35 + Math.random() * 40) * 1000;
+            setTimeout(triggerGoldenCakeSpawnEngine, nextInterval);
+        }
+
+        function buyBuilding(id) {
+            const currentOwned = state.buildings[id].owned;
+            const cost = getMultiBuyCost(id, currentOwned, buyQuantity);
+            if (state.cakes >= cost) {
+                state.cakes -= cost;
+                state.buildings[id].owned += buyQuantity;
+                updateUI();
+            }
+        }
+
+        function purchaseUpgrade(id) {
+            const cost = state.upgrades[id].cost;
+            if (!state.upgrades[id].owned && state.cakes >= cost) {
+                state.cakes -= cost;
+                state.upgrades[id].owned = true;
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('cake-count').innerText = `${formatNumber(state.cakes)} ${state.cakes === 1 ? 'Cake' : 'Cakes'}`;
+            document.getElementById('cps-count').innerText = `Cakes Per Second: ${formatNumber(getTotalCps())}`;
+            document.getElementById('stat-total-baked').innerText = formatNumber(state.totalCakesBaked);
+            document.getElementById('stat-time').innerText = `${Math.floor(state.timeElapsed)}s`;
+            document.getElementById('stat-click-power').innerText = `${formatNumber(getClickPower())} ${getClickPower() === 1 ? 'Cake' : 'Cakes'}`;
+
+            const cheatBtn = document.getElementById('cheat-btn');
+            if (cheatBtn) {
+                if (state.cheatAttempts >= 2) {
+                    cheatBtn.style.display = 'none';
+                } else if (state.cheatsUnlocked) {
+                    cheatBtn.style.backgroundColor = '#2E7D32';
+                    cheatBtn.style.color = 'var(--white)';
+                    cheatBtn.innerText = 'Set Stats';
+                }
+            }
+
+            for (const id in state.buildings) {
+                const currentOwned = state.buildings[id].owned;
+                const cost = getMultiBuyCost(id, currentOwned, buyQuantity);
+                const el = document.getElementById(`shop-${id}`);
+                const costEl = document.getElementById(`cost-${id}`);
+                const countEl = document.getElementById(`count-${id}`);
+
+                if (costEl) costEl.innerText = `${formatNumber(cost)} Cakes`;
+                if (countEl) countEl.innerText = currentOwned;
+
+                if (el) {
+                    if (state.cakes >= cost) {
+                        el.classList.remove('disabled');
+                        if(costEl) {
+                            costEl.classList.remove('unaffordable');
+                            costEl.classList.add('affordable');
+                        }
+                    } else {
+                        el.classList.add('disabled');
+                        if(costEl) {
+                            costEl.classList.remove('affordable');
+                            costEl.classList.add('unaffordable');
+                        }
+                    }
+                }
+            }
+
+            for (const id in state.upgrades) {
+                const el = document.getElementById(`upgrade-${id}`);
+                if (el) {
+                    if (state.upgrades[id].owned) {
+                        el.classList.add('owned');
+                    } else {
+                        el.classList.remove('owned');
+                        if (state.cakes >= state.upgrades[id].cost) {
+                            el.classList.remove('disabled');
+                        } else {
+                            el.classList.add('disabled');
+                        }
+                    }
+                }
+            }
+        }
+
+        function saveGame() {
+            localStorage.setItem('cakeClickerSave', JSON.stringify(state));
+        }
+
+        function loadGame() {
+            const rawSave = localStorage.getItem('cakeClickerSave');
+            if (rawSave) {
+                try {
+                    const loadedState = JSON.parse(rawSave);
+                    if (loadedState.cakes !== undefined) state.cakes = loadedState.cakes;
+                    if (loadedState.totalCakesBaked !== undefined) state.totalCakesBaked = loadedState.totalCakesBaked;
+                    if (loadedState.timeElapsed !== undefined) state.timeElapsed = loadedState.timeElapsed;
+                    if (loadedState.cheatsUnlocked !== undefined) state.cheatsUnlocked = loadedState.cheatsUnlocked;
+                    if (loadedState.cheatAttempts !== undefined) state.cheatAttempts = loadedState.cheatAttempts;
+                    if (loadedState.cheatClickPower !== undefined) state.cheatClickPower = loadedState.cheatClickPower;
+                    if (loadedState.cheatCps !== undefined) state.cheatCps = loadedState.cheatCps;
+                    
+                    if (loadedState.buildings) {
+                        for (const bId in state.buildings) {
+                            if (loadedState.buildings[bId] && loadedState.buildings[bId].owned !== undefined) {
+                                state.buildings[bId].owned = loadedState.buildings[bId].owned;
+                            }
+                        }
+                    }
+                    if (loadedState.upgrades) {
+                        for (const uId in loadedState.upgrades) {
+                            if (loadedState.upgrades[uId] && loadedState.upgrades[uId].owned !== undefined) {
+                                state.upgrades[uId].owned = loadedState.upgrades[uId].owned;
+                            }
+                        }
+                    }
+                } catch(err) {
+                    console.error("Failed loading saved bakery layout data.", err);
+                }
+            }
+        }
+
+        window.onload = function() {
+            generateBakeryShopSystem();
+            loadGame();
+            initDOM();
+            updateUI();
+
+            setInterval(() => {
+                const now = Date.now();
+                const dt = (now - lastUpdateTime) / 1000;
+                lastUpdateTime = now;
+
+                if (dt > 0) {
+                    const currentCps = getTotalCps();
+                    const gained = currentCps * dt;
+                    state.cakes += gained;
+                    state.totalCakesBaked += gained;
+                    state.timeElapsed += dt;
+                    updateUI();
+                }
+            }, 100);
+
+            setInterval(saveGame, 10000);
+            scheduleNextGoldenCakeDrop();
+        };
+    </script>
+</body>
+</html>
